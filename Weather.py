@@ -12,7 +12,7 @@ client = MongoClient(
     username=os.environ["WEATHER_DB_USER"],
     password=os.environ["WEATHER_DB_PW"],
     port=int(os.environ["WEATHER_DB_PORT"]),
-    authSource="weather",
+    authSource=os.environ["WEATHER_DB_NAME"],
 )
 
 db = client[os.environ["WEATHER_DB_NAME"]]
