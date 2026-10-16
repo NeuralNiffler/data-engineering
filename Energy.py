@@ -71,6 +71,3 @@ def api_status() -> dict:
     data = response.json()
 
     return data
-
-def print_engine() :
-    print(engine)

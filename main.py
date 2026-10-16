@@ -13,11 +13,15 @@ if __name__ == '__main__':
     print(Weather.exec())
 
     change_seq = Energy.api_status()["changeSeq"]
-    cursor=Warehouse.get_cursor("energy", "readings")
+    cursor = Warehouse.get_cursor("energy", "readings")
 
-    print(Energy.api_status())
-    print(Energy.exec())
-    print(Energy.extract_master_data())
-    print(Energy.extract_transactional_data(cursor, change_seq))
+    meters = Energy.extract_master_data()
+    count = Warehouse.write_raw_full(meters, "energy_meters")
+
+    readings = Energy.extract_transactional_data(cursor, change_seq)
+    count_increment = 0
+    if not readings.empty:
+       count_increment = Warehouse.write_raw_incremental(readings, "energy", "readings", change_seq)
+    print(f"energy: {count} meters, {count_increment} readings geladen")
 
 
