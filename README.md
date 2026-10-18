@@ -39,9 +39,9 @@ Dieses Studentenprojekt verbindet sich mit drei Datenquellen (Shop, Energie, Wet
 | Pfad | Inhalt |
 | --- | --- |
 | `main.py` | **Hauptskript:** ruft alle drei Datenquellen nacheinander auf. |
-| `Shop.py` | Anbindung an die Shop-Datenbank (PostgreSQL) und deren API. |
-| `Energy.py` | Anbindung an die Energie-Datenbank (MySQL) und deren API. |
-| `Weather.py` | Anbindung an die Wetter-Datenbank (MongoDB) und deren API. |
+| `shop.py` | Anbindung an die Shop-Datenbank (PostgreSQL) und deren API. |
+| `energy.py` | Anbindung an die Energie-Datenbank (MySQL) und deren API. |
+| `weather.py` | Anbindung an die Wetter-Datenbank (MongoDB) und deren API. |
 | `requirements.txt` | Liste der benötigten Python-Pakete mit fixen Versionen. |
 | `.env.example` | Vorlage mit allen benötigten Umgebungsvariablen (ohne Werte). |
 | `.env` | *Lokal:* Zugangsdaten zu den Quellsystemen. -> Muss am Anfang manuell erstellt werden (siehe Setup). |
