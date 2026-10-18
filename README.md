@@ -47,6 +47,26 @@ Dieses Studentenprojekt verbindet sich mit drei Datenquellen (Shop, Energie, Wet
    * **Shop & Wetter:** API-Status (`/api/status`) abfragen und Daten aus der Quelldatenbank lesen (noch ohne Laden ins Warehouse).
    * **Energie:** `meters` wird vollständig nach `raw.energy_meters` geladen (ersetzt). `readings` wird inkrementell nach `raw.energy_readings` geladen, vom letzten Ladestand bis zum aktuellen `changeSeq` der API. Danach wird der Ladestand in `etl.load_state` nachgeführt.
 
+## 🧪 Tests
+
+Die Unit-Tests laufen ohne Zugangsdaten, Docker und Netzwerk:
+```bash
+pip install -r requirements-dev.txt
+pytest -v
+```
+
+* **Umgebungsvariablen:** `tests/conftest.py` setzt Dummy-Werte, bevor die Module importiert werden. Die echte `.env` wird nicht verwendet.
+* **Datenbanken:** Die Engines der Quelle Energie und des Warehouses werden pro Test durch eine SQLite-Datenbank im Arbeitsspeicher ersetzt. Für das Warehouse werden die Schemas `raw` und `etl` per `ATTACH` und die Funktion `now()` nachgebildet.
+* **APIs:** `requests.get` wird gemockt.
+
+| Datei | Prüft |
+| --- | --- |
+| `tests/test_api.py` | Aufruf von `/api/status` (URL, Timeout), Auswertung von `ready`, Weitergabe von HTTP-Fehlern |
+| `tests/test_energy.py` | Fenster der inkrementellen Extraktion (`cursor < change_seq <= upper_bound`) |
+| `tests/test_warehouse.py` | Inkrementelles Laden über zwei Läufe: Anhängen, Zählen des neuen Fensters, Nachführen von `last_cursor` |
+
+`main.py` ist noch nicht durch Tests abgedeckt.
+
 ## 📁 Projektstruktur
 
 | Pfad | Inhalt |
@@ -61,6 +81,9 @@ Dieses Studentenprojekt verbindet sich mit drei Datenquellen (Shop, Energie, Wet
 | `sql/init/01_schemas.sql` | Legt die Schemas `raw`, `staging`, `mart` und `etl` an. |
 | `sql/init/02_load_state.sql` | Legt `etl.load_state` und `etl.load_runs` an, inkl. Startwert für `energy`/`readings`. |
 | `requirements.txt` | Liste der benötigten Python-Pakete. |
+| `requirements-dev.txt` | Zusätzliche Pakete für die Entwicklung (`pytest`). |
+| `pytest.ini` | Konfiguration für pytest (Testordner `tests/`). |
+| `tests/` | Unit-Tests für `api.py`, `energy.py` und `warehouse.py` (siehe Tests). |
 | `.env.example` | Vorlage mit allen benötigten Umgebungsvariablen (ohne Zugangsdaten). |
 | `.env` | *Lokal:* Zugangsdaten zu den Quellsystemen und zum Warehouse. -> Muss am Anfang manuell erstellt werden (siehe Setup). |
 
