@@ -27,7 +27,7 @@ def complex_query() -> DataFrame:
 
     return None
 
-def api_status() -> DataFrame:
+def get_api_status() -> DataFrame:
     baseURL = f"http://{os.environ["WEATHER_HOST"]}:{os.environ["WEATHER_API_PORT"]}/api/status"
     response = requests.get(baseURL, timeout=10)
     response.raise_for_status()

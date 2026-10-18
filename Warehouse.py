@@ -15,7 +15,7 @@ engine = create_engine(URL.create(
     database=os.environ["DWH_DB_NAME"],
 ))
 
-def get_cursor(source: str, table_name: str) -> int:
+def get_last_cursor(source: str, table_name: str) -> int:
     query = text("""
             SELECT last_cursor
             FROM etl.load_state
