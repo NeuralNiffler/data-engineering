@@ -2,6 +2,19 @@ import Shop
 import Weather
 import Energy
 import Warehouse
+import logging
+from rich.console import Console
+from rich.logging import RichHandler
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(name)s: %(message)s",
+    datefmt="%H:%M:%S",
+    handlers=[RichHandler(
+        console=Console(width=150),
+        show_path=False,
+    )],
+)
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
@@ -12,6 +25,7 @@ if __name__ == '__main__':
     print(Weather.get_api_status())
     print(Weather.exec())
 
+    energy_ready = Energy.is_ready()
     meters = Energy.extract_full("meters")
     count = Warehouse.write_raw_full(meters, "energy_meters")
 
@@ -22,6 +36,6 @@ if __name__ == '__main__':
     count_increment = 0
     if not readings.empty:
        count_increment = Warehouse.write_raw_incremental(readings, "energy", "readings", change_seq)
-    print(f"energy: {count} meters, {count_increment} readings geladen")
+
 
 

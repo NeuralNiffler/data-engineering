@@ -4,7 +4,9 @@ import pandas as pd
 from pandas import DataFrame
 from pymongo import MongoClient
 import requests
+import logging
 
+log = logging.getLogger(__name__)
 load_dotenv()
 
 client = MongoClient(

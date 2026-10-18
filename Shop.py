@@ -4,7 +4,9 @@ import pandas as pd
 from pandas import DataFrame
 from sqlalchemy import create_engine, URL
 import requests
+import logging
 
+log = logging.getLogger(__name__)
 load_dotenv()
 
 engine = create_engine(URL.create(
