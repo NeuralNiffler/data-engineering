@@ -25,20 +25,22 @@ def get_last_cursor(source: str, table_name: str) -> int:
               AND table_name = :table_name
             """)
     df = pd.read_sql_query(query, engine, params={"source": source, "table_name": table_name})
+    if df.empty:
+        raise ValueError(f"No load_state entry for {source}.{table_name} - add it to etl.load_state")
     last_cursor = int(df['last_cursor'].iloc[0])
 
     log.info("Last cursor for %s %s is %d", source, table_name, last_cursor)
 
     return last_cursor
 
-def write_raw_full(df: DataFrame, table_name: str) -> int:
-    count_query = text(f"SELECT count(*) FROM raw.{table_name}")
+def write_raw_full(df: DataFrame, source: str, table_name: str) -> int:
+    count_query = text(f"SELECT count(*) FROM raw.{source}_{table_name}")
 
     with engine.begin() as conn:
-        df.to_sql(table_name, conn, schema="raw", if_exists="replace", index=False)
+        df.to_sql(f"{source}_{table_name}", conn, schema="raw", if_exists="replace", index=False)
         rows_in_table = conn.execute(count_query).scalar_one()
 
-    log.info("%s: %d Rows written", table_name, rows_in_table)
+    log.info("%s %s: %d Rows written", source, table_name, rows_in_table)
 
     return rows_in_table
 

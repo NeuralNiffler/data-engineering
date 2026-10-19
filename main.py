@@ -27,7 +27,7 @@ if __name__ == '__main__':
 
     energy_ready = energy.is_ready()
     meters = energy.extract_full("meters")
-    count = warehouse.write_raw_full(meters, "energy_meters")
+    warehouse.write_raw_full(meters, "energy", "meters")
 
     change_seq = energy.get_api_status()["changeSeq"]
     last_cursor = warehouse.get_last_cursor("energy", "readings")
