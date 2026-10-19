@@ -1,4 +1,5 @@
 import os
+from enum import StrEnum
 from dotenv import load_dotenv
 import pandas as pd
 from pandas import DataFrame
@@ -10,6 +11,12 @@ import api
 log = logging.getLogger(__name__)
 load_dotenv()
 
+SOURCE = "energy"
+
+class Table(StrEnum):
+    METERS = "meters"
+    READINGS = "readings"
+
 engine = sa.create_engine(sa.URL.create(
     host=os.environ["ENERGY_HOST"],
     drivername="mysql+pymysql",
@@ -19,13 +26,13 @@ engine = sa.create_engine(sa.URL.create(
     database=os.environ["ENERGY_DB_NAME"],
 ))
 
-def extract_full(table_name: str) -> DataFrame:
+def extract_full(table_name: Table) -> DataFrame:
     log.info("Extracting full from source: %s", table_name)
     df = pd.read_sql_table(table_name, engine)
     log.info("%s: %d Rows loaded", table_name, len(df))
     return df
 
-def extract_incremental(table_name: str, cursor: int, upper_bound: int) -> DataFrame:
+def extract_incremental(table_name: Table, cursor: int, upper_bound: int) -> DataFrame:
     log.info("Extracting increment from source: %s, current_cursor: %d, upper_bound: %d", table_name, cursor, upper_bound)
     table = sa.Table(table_name, sa.MetaData(), autoload_with=engine)
     seq = table.c["change_seq"]
@@ -43,5 +50,8 @@ def extract_incremental(table_name: str, cursor: int, upper_bound: int) -> DataF
 def get_api_status() -> dict:
     return api.get_status(os.environ["ENERGY_HOST"], os.environ["ENERGY_API_PORT"])
 
-def is_ready() ->bool:
+def is_ready() -> bool:
     return api.is_ready(os.environ["ENERGY_HOST"], os.environ["ENERGY_API_PORT"])
+
+def get_change_seq() -> int:
+    return api.get_change_seq(os.environ["ENERGY_HOST"], os.environ["ENERGY_API_PORT"])

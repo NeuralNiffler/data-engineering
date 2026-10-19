@@ -1,4 +1,5 @@
 import os
+from enum import StrEnum
 from dotenv import load_dotenv
 import pandas as pd
 from pandas import DataFrame
@@ -11,6 +12,14 @@ import api
 log = logging.getLogger(__name__)
 load_dotenv()
 
+SOURCE = "shop"
+
+class Table(StrEnum):
+    CUSTOMERS = "customers"
+    PRODUCTS = "products"
+    ORDERS = "orders"
+    ORDER_ITEMS = "order_items"
+
 engine = create_engine(URL.create(
     host=os.environ["SHOP_HOST"],
     drivername="postgresql+psycopg",
@@ -20,13 +29,13 @@ engine = create_engine(URL.create(
     database=os.environ["SHOP_DB_NAME"],
 ))
 
-def extract_full(table_name: str) -> DataFrame:
+def extract_full(table_name: Table) -> DataFrame:
     log.info("Extracting full from source: %s", table_name)
     df = pd.read_sql_table(table_name, engine)
     log.info("%s: %d Rows loaded", table_name, len(df))
     return df
 
-def extract_incremental(table_name: str, cursor: int, upper_bound: int) -> DataFrame:
+def extract_incremental(table_name: Table, cursor: int, upper_bound: int) -> DataFrame:
     log.info("Extracting increment from source: %s, current_cursor: %d, upper_bound: %d", table_name, cursor, upper_bound)
     table = sa.Table(table_name, sa.MetaData(), autoload_with=engine)
     seq = table.c["change_seq"]
@@ -41,7 +50,7 @@ def extract_incremental(table_name: str, cursor: int, upper_bound: int) -> DataF
     log.info("%s: %d Rows loaded", table_name, len(df))
     return df
 
-def extract_incremental_child(table_name: str, parent_name: str, join_key: str, cursor: int, upper_bound: int) -> DataFrame:
+def extract_incremental_child(table_name: Table, parent_name: Table, join_key: str, cursor: int, upper_bound: int) -> DataFrame:
     log.info("Extracting child increment from source: %s via %s, current_cursor: %d, upper_bound: %d", table_name, parent_name, cursor, upper_bound)
     metadata = sa.MetaData()
     child = sa.Table(table_name, metadata, autoload_with=engine)
@@ -64,3 +73,6 @@ def get_api_status() -> dict:
 
 def is_ready() ->bool:
     return api.is_ready(os.environ["SHOP_HOST"], os.environ["SHOP_API_PORT"])
+
+def get_change_seq() -> int:
+    return api.get_change_seq(os.environ["SHOP_HOST"], os.environ["SHOP_API_PORT"])
