@@ -3,6 +3,7 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
+import mongomock
 import pytest
 import sqlalchemy as sa
 from sqlalchemy.pool import StaticPool
@@ -10,18 +11,31 @@ from sqlalchemy.pool import StaticPool
 # Module bauen ihre Engine beim Import aus os.environ -> Dummy-Werte vorher setzen.
 # load_dotenv() überschreibt bereits gesetzte Variablen nicht.
 DUMMY_ENV = {
+    #Energy
     "ENERGY_HOST": "energy.test",
     "ENERGY_DB_USER": "user",
     "ENERGY_DB_PW": "pw",
     "ENERGY_DB_PORT": "3312",
     "ENERGY_DB_NAME": "energy",
     "ENERGY_API_PORT": "8102",
+
+    #Shop
     "SHOP_HOST": "shop.test",
     "SHOP_DB_USER": "user",
     "SHOP_DB_PW": "pw",
     "SHOP_DB_PORT": "5432",
     "SHOP_DB_NAME": "shop",
     "SHOP_API_PORT": "8101",
+
+    #Weather
+    "WEATHER_HOST": "weather.test",
+    "WEATHER_DB_USER": "user",
+    "WEATHER_DB_PW": "pw",
+    "WEATHER_DB_PORT": "27013",
+    "WEATHER_DB_NAME": "weather",
+    "WEATHER_API_PORT": "8103",
+
+    #Warehouse
     "DWH_HOST": "dwh.test",
     "DWH_DB_USER": "user",
     "DWH_DB_PW": "pw",
@@ -35,6 +49,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 import energy  # noqa: E402
 import shop  # noqa: E402
 import warehouse  # noqa: E402
+import weather  # noqa: E402
 
 
 def _sqlite_engine() -> sa.Engine:
@@ -105,10 +120,27 @@ def shop_engine(monkeypatch):
 
 
 @pytest.fixture
+def weather_db(monkeypatch):
+    db = mongomock.MongoClient()["weather"]
+    db["stations"].insert_many([
+        {"station_id": "W01", "altitude_m": 260, "city_code": "CH-BS"},
+        {"station_id": "W02", "altitude_m": 410, "city_code": "CH-AG"},
+    ])
+
+    db["observations"].insert_many([
+        {"_id": f"O{seq:08d}", "change_seq": seq, "observation_id": seq, "station_id": "W01",
+         "measurements": {"temperature_c": 10.0 + seq, "humidity_pct": 50.0, "rain_mm": 0}}
+        for seq in (3, 1, 5, 2, 4)
+    ])
+    monkeypatch.setattr(weather, "db", db)
+    return db
+
+
+@pytest.fixture
 def dwh_engine(monkeypatch):
     engine = _sqlite_engine()
 
-    # Postgres-Schemas raw/etl als attached DBs nachbilden, now() bereitstellen
+
     @sa.event.listens_for(engine, "connect")
     def _on_connect(dbapi_conn, _):
         dbapi_conn.execute("ATTACH DATABASE ':memory:' AS raw")

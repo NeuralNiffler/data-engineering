@@ -27,5 +27,6 @@ CREATE TABLE IF NOT EXISTS etl.load_runs (
 INSERT INTO etl.load_state (source, table_name)
 VALUES ('energy', 'readings'),
        ('shop',   'orders'),
-       ('shop',   'order_items')
+       ('shop',   'order_items'),
+       ('weather', 'observations')
 ON CONFLICT DO NOTHING;

@@ -40,8 +40,17 @@ if __name__ == '__main__':
     if not order_items.empty:
         count_increment = warehouse.write_raw_incremental(order_items, shop.SOURCE, shop.Table.ORDER_ITEMS, shop_change_seq)
 
-    print(weather.get_api_status())
-    print(weather.exec())
+    weather_ready = weather.is_ready()
+    stations = weather.extract_full(weather.Table.STATIONS)
+    warehouse.write_raw_full(stations, weather.SOURCE, weather.Table.STATIONS)
+
+    weather_change_seq = weather.get_change_seq()
+    last_cursor = warehouse.get_last_cursor(weather.SOURCE, weather.Table.OBSERVATIONS)
+
+    observations = weather.extract_incremental(weather.Table.OBSERVATIONS, last_cursor, weather_change_seq)
+
+    if not observations.empty:
+        count_increment = warehouse.write_raw_incremental(observations, weather.SOURCE, weather.Table.OBSERVATIONS, weather_change_seq)
 
     energy_ready = energy.is_ready()
     meters = energy.extract_full(energy.Table.METERS)
