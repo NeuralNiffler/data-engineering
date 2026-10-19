@@ -23,7 +23,9 @@ CREATE TABLE IF NOT EXISTS etl.load_runs (
     FOREIGN KEY (source, table_name) REFERENCES etl.load_state (source, table_name)
 );
 
--- Startwert für Energy
+-- Startwerte pro Quelle/Tabelle
 INSERT INTO etl.load_state (source, table_name)
-VALUES ('energy', 'readings')
+VALUES ('energy', 'readings'),
+       ('shop',   'orders'),
+       ('shop',   'order_items')
 ON CONFLICT DO NOTHING;

@@ -16,6 +16,12 @@ DUMMY_ENV = {
     "ENERGY_DB_PORT": "3312",
     "ENERGY_DB_NAME": "energy",
     "ENERGY_API_PORT": "8102",
+    "SHOP_HOST": "shop.test",
+    "SHOP_DB_USER": "user",
+    "SHOP_DB_PW": "pw",
+    "SHOP_DB_PORT": "5432",
+    "SHOP_DB_NAME": "shop",
+    "SHOP_API_PORT": "8101",
     "DWH_HOST": "dwh.test",
     "DWH_DB_USER": "user",
     "DWH_DB_PW": "pw",
@@ -27,6 +33,7 @@ os.environ.update(DUMMY_ENV)
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 import energy  # noqa: E402
+import shop  # noqa: E402
 import warehouse  # noqa: E402
 
 
@@ -61,6 +68,39 @@ def energy_engine(monkeypatch):
                 (5, 1, 14.0, 4)
             """))
     monkeypatch.setattr(energy, "engine", engine)
+    return engine
+
+
+@pytest.fixture
+def shop_engine(monkeypatch):
+    engine = _sqlite_engine()
+    with engine.begin() as conn:
+        conn.execute(sa.text("""
+            CREATE TABLE orders (
+                order_id    INTEGER PRIMARY KEY,
+                customer_id INTEGER,
+                status      TEXT,
+                change_seq  INTEGER
+            )"""))
+        conn.execute(sa.text("INSERT INTO orders VALUES (10, 1, 'paid', 1), (11, 2, 'shipped', 2), (12, 1, 'paid', 3)"))
+        conn.execute(sa.text("""
+            CREATE TABLE order_items (
+                order_id   INTEGER,
+                line_no    INTEGER,
+                product_id INTEGER,
+                quantity   INTEGER,
+                PRIMARY KEY (order_id, line_no)
+            )"""))
+
+        conn.execute(sa.text("""
+            INSERT INTO order_items VALUES
+                (12, 1, 7, 1),
+                (10, 2, 5, 1),
+                (11, 1, 6, 3),
+                (10, 1, 4, 2),
+                (12, 2, 8, 2)
+            """))
+    monkeypatch.setattr(shop, "engine", engine)
     return engine
 
 
